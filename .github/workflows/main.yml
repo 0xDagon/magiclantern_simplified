@@ -1,0 +1,58 @@
+name: build-1300d
+on:
+  workflow_dispatch:
+  push:
+    branches: ["1300d_take_2"]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi make python3 python3-docutils zip git mercurial pkg-config
+
+      - name: Compiler wrapper (-fcommon)
+        run: |
+          mkdir -p "$HOME/wrap"
+          printf '#!/bin/sh\nexec /usr/bin/arm-none-eabi-gcc -fcommon -Wno-error "$@"\n' > "$HOME/wrap/arm-none-eabi-gcc"
+          chmod +x "$HOME/wrap/arm-none-eabi-gcc"
+
+      - name: Build platform 1300D.120 (zip)
+        continue-on-error: true
+        run: |
+          export PATH="$HOME/wrap:$PATH"
+          cd platform/1300D.120
+          make SHELL=/bin/bash -j"$(nproc)" zip 2>&1 | tee /tmp/zip.log | tail -n 60
+
+      - name: Build installer 1300D.120
+        continue-on-error: true
+        run: |
+          export PATH="$HOME/wrap:$PATH"
+          cd installer/1300D.120
+          make SHELL=/bin/bash 2>&1 | tee /tmp/installer.log | tail -n 60
+
+      - name: Show result
+        if: always()
+        run: |
+          echo "=== zip.log tail ==="; tail -n 40 /tmp/zip.log || true
+          echo "=== installer.log tail ==="; tail -n 40 /tmp/installer.log || true
+          echo "=== produced files ==="
+          find platform/1300D.120 installer/1300D.120 \( -iname '*.fir' -o -iname '*.zip' -o -name 'autoexec.bin' \) | head -n 40 || true
+
+      - name: Pack
+        if: always()
+        run: |
+          mkdir -p out
+          find platform/1300D.120 installer/1300D.120 \( -iname '*.fir' -o -iname '*.zip' -o -name 'autoexec.bin' \) -type f -exec cp {} out/ \; || true
+          cp /tmp/zip.log /tmp/installer.log out/ 2>/dev/null || true
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ml-1300D-120-simplified
+          path: out/
