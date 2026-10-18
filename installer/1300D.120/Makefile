@@ -11,10 +11,11 @@ FIR_BASE = 0x800120
 MAIN_FIRMWARE_ADDR = 0xFE0C0000
 PLATFORM_ARCH = armv5te
 
-# UNVERIFIED on real hardware: copied from the 1100D installer
-# (just above the end of the DryOS bss). Must be checked for 1300D 1.2.0
-# before this installer is ever run on a camera.
-RESTARTSTART = 0x7f000
+# Chosen from a ROM dump of 1300D 1.2.0: the DryOS bss end literal at
+# 0xFE0C3B10 is 0x0014B400, so the installer is placed just above it.
+# (The 1100D installer does the same: "just above the end of the bss".)
+# STILL UNVERIFIED on real hardware / by the port authors.
+RESTARTSTART = 0x150000
 ML_BOOT_OBJ = boot-d45.o
 
 include ../Makefile
