@@ -22,6 +22,14 @@
 #define HIJACK_FIXBR_CREATE_ITASK 0xFE0C3AF8
 #define HIJACK_INSTR_MY_ITASK 0xFE0C3B20
 
+// Length of the firmware entry/cstart region copied (and patched) by boot-d45.c and the installer.
+// Rule (see 550D/SX70 consts.h): highest HIJACK_* address - MAIN_FIRMWARE_ADDR, aligned up.
+// Highest is HIJACK_INSTR_MY_ITASK 0xFE0C3B20 -> 0x3B24 bytes needed; verified against a ROM dump of
+// 1300D 1.2.0 (all HIJACK_* addresses match). 0x4000 leaves a safety margin.
+#ifndef FIRMWARE_ENTRY_LEN
+#define FIRMWARE_ENTRY_LEN 0x4000
+#endif
+
 // Used in boot-hack.c with CONFIG_ALLOCATE_MEMORY_POOL
 //#define ROM_ITASK_START 0xFE1296C8
 //#define ROM_ITASK_END 0xFE1296C8//0xfe129bd8 // 0xFE1298A0 //fe12b8bc FE1298A0
